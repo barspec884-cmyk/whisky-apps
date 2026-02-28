@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Whisky Tasting Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a1008;--paper:#f5f0e8;--amber:#c8882a;
+  --amber-light:#e8b96a;--amber-pale:#f5e4c0;--smoke:#8a7a6a;--deep:#3a2810;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Serif JP',serif;min-height:100vh;padding:32px 16px 80px;overflow-x:hidden;}
+.container{max-width:760px;margin:0 auto;}
+
+header{text-align:center;padding:50px 20px;margin-bottom:40px;background:rgba(255,255,255,0.4);border-radius:8px;box-shadow:inset 0 0 20px rgba(200,136,42,0.05);}
+header::before,header::after{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:14px auto;width:80%;}
+.subtitle{font-size:.72rem;letter-spacing:.4em;color:var(--deep);margin-bottom:10px;text-transform:uppercase;font-weight:700;}
+h1{font-family:'Shippori Mincho',serif;font-size:clamp(1.5rem,6vw,2.2rem);letter-spacing:.15em;color:var(--deep);}
+h1 span{color:var(--amber);text-shadow:1px 1px 0px rgba(255,255,255,0.8);}
+
+.section{margin:24px 0;background:rgba(255,255,255,.6);border:1px solid rgba(200,136,42,.2);border-radius:4px;overflow:hidden;box-shadow:3px 3px 16px rgba(58,40,16,.06);}
+.section-header{display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,var(--deep),#5a3a18);cursor:pointer;transition:.3s;}
+.section-header:hover{opacity:.9;}
+.section-number{font-family:'Shippori Mincho',serif;font-size:1.8rem;color:var(--amber-light);}
+.section-title{font-size:clamp(.85rem,2.5vw,1rem);font-weight:700;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.3);}
+.section-title small{display:block;font-size:.72rem;color:#f0d898;margin-top:3px;font-weight:400;letter-spacing:.04em;}
+.toggle-icon{margin-left:auto;color:var(--amber-light);transition:.3s;}
+.section-body{padding:20px 22px;display:none;}
+.section-hint{font-size:.78rem;color:var(--smoke);margin-bottom:14px;line-height:1.6;}
+
+/* ヒント表示エリア */
+.hint-box{
+min-height:40px;padding:10px 14px;margin-bottom:12px;
+background:rgba(200,136,42,.06);border-left:3px solid var(--amber);
+border-radius:0 4px 4px 0;font-size:.8rem;color:var(--smoke);line-height:1.7;
+transition:.3s;
+}
+.hint-box.has-hint{color:var(--deep);}
+
+/* プルダウン行 */
+.dropdown-wrap{display:flex;gap:8px;align-items:center;}
+.word-select{
+flex:1;padding:11px 36px 11px 14px;
+border:1.5px solid rgba(200,136,42,.4);border-radius:8px;
+background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c8882a' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+font-family:'Noto Serif JP',serif;font-size:.9rem;color:var(--ink);
+outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:.2s;
+}
+.word-select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,136,42,.12);}
+
+.add-word-btn{
+background:var(--amber);color:#fff;border:none;
+padding:11px 16px;border-radius:8px;font-family:'Noto Serif JP',serif;
+font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:.2s;
+}
+.add-word-btn:active{background:var(--deep);}
+
+/* 自由入力行 */
+.free-wrap{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.free-input{
+flex:1;padding:10px 14px;border:1.5px dashed rgba(200,136,42,.4);border-radius:8px;
+background:rgba(255,255,255,.7);font-family:'Noto Serif JP',serif;font-size:.9rem;
+color:var(--ink);outline:none;transition:.2s;
+}
+.free-input::placeholder{color:var(--smoke);font-size:.82rem;}
+.free-input:focus{border-color:var(--amber);border-style:solid;background:#fff;box-shadow:0 0 0 3px rgba(200,136,42,.1);}
+.add-free-btn{
+background:var(--deep);color:var(--amber-light);border:none;
+padding:11px 14px;border-radius:8px;font-size:.88rem;font-weight:700;
+cursor:pointer;white-space:nowrap;flex-shrink:0;transition:.2s;
+}
+.add-free-btn:active{background:var(--amber);color:#fff;}
+
+/* 選択済みタグ */
+.selected-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.sel-tag{
+display:inline-flex;align-items:center;gap:5px;
+background:var(--amber-pale);border:1px solid rgba(200,136,42,.4);
+color:var(--deep);padding:5px 10px 5px 14px;border-radius:20px;font-size:.82rem;
+animation:tagPop .15s ease;
+}
+.sel-tag.free-tag{background:#fff;border-style:dashed;}
+.sel-tag-remove{background:none;border:none;cursor:pointer;color:var(--smoke);font-size:1rem;line-height:1;padding:0;}
+.sel-tag-remove:hover{color:var(--amber);}
+@keyframes tagPop{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+
+
+/* メモ */
+.memo-section{margin-top:32px;padding:22px;background:#fff;border:1px solid rgba(200,136,42,.2);border-radius:4px;}
+.memo-title{font-family:'Shippori Mincho',serif;font-size:1.1rem;color:var(--deep);margin-bottom:12px;display:flex;justify-content:space-between;}
+#memo-box{width:100%;min-height:150px;border:1px solid rgba(200,136,42,.3);border-radius:3px;padding:15px;font-family:'Noto Serif JP',serif;font-size:.95rem;line-height:1.6;background:rgba(245,240,232,.3);resize:vertical;}
+.memo-btns{display:flex;gap:10px;margin-top:12px;}
+.memo-btn{flex:2;background:var(--deep);color:var(--amber-light);border:none;padding:14px;font-size:.85rem;font-weight:bold;border-radius:4px;cursor:pointer;}
+.memo-btn.clear{flex:1;background:rgba(58,40,16,.1);color:var(--smoke);}
+
+footer{text-align:center;margin-top:60px;padding-top:20px;border-top:1px solid rgba(200,136,42,.1);font-size:.7rem;color:var(--smoke);letter-spacing:.1em;}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+<header>
+  <p class="subtitle">Whisky Tasting Guide</p>
+  <h1><span>琥珀の記憶</span>を綴る</h1>
+</header>
+
+<!-- 01 色彩 -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">01</div>
+    <div class="section-title">色彩と粘性を観る<small>Color & Legs</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">グラスの中の光の屈折や、縁を伝い落ちる雫(脚)の速さを観察します。</p>
+    <div class="hint-box" id="hint-01">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-01" onchange="showHint('01')">
+        <option value="">── ワードを選ぶ ──</option>
+        <option data-hint="無色透明に近く、若いウイスキーや軽めのスコッチに多い">澄んだプラチナゴールド</option>
+        <option data-hint="熟成の浅い原酒。フレッシュで軽快な印象を与える">淡いレモンゴールド</option>
+        <option data-hint="バーボン樽やシェリー樽で適度に熟成した黄金色">輝きのある琥珀色</option>
+        <option data-hint="はちみつを思わせる中程度の熟成色。豊かな甘さを予感させる">温かみのある蜂蜜色</option>
+        <option data-hint="長期熟成またはシェリー樽由来の深い赤みがかった茶色">深いマホガニー</option>
+        <option data-hint="シェリー樽長期熟成に多い。赤ワインのような深みのある赤褐色">濃いガーネット</option>
+        <option data-hint="脚(ティアーズ)が厚く遅い＝アルコール度数高め・糖分豊富のサイン">オイリーで濃厚な質感</option>
+        <option data-hint="脚がゆっくり落ちる＝高アルコールまたは熟成によるグリセリン成分">涙がゆっくりと落ちる</option>
+        <option data-hint="幅広い脚がゆるやかに流れる。ボディの強さと熟成感を示す">脚が太くゆったり流れる</option>
+        <option data-hint="濁りがなく光を透過する。高品質の証であり、清澄処理が丁寧">透明感のある輝き</option>
+        <option data-hint="グラスを傾けた縁に熟成色の輪が光る。熟成年数を感じさせる">グラスの縁にゴールドの光</option>
+        <option data-hint="金色よりも赤みがかったブロンズ。シェリーとバーボン樽の中間的な熟成">赤みがかったブロンズ</option>
+        <option data-hint="銅のような赤橙色。長期シェリー樽熟成に見られる">深みのあるカッパー</option>
+        <option data-hint="液体がとろみを帯びてゆっくり動く。高熟成・加水なしの原酒に多い">粘度があり重く揺れる</option>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-01','tags-01','hint-01')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-01" type="text" placeholder="✏️ 自由入力（例：深い琥珀色に赤みが差す）" onkeydown="if(event.key==='Enter')addFree('free-01','tags-01')">
+      <button class="add-free-btn" onclick="addFree('free-01','tags-01')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-01"></div>
+  </div>
+</div>
+
+<!-- 02 アロマ -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">02</div>
+    <div class="section-title">立ち上がるアロマ<small>Nosing & Bouquet</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">まずはストレートで。次に数滴の加水で「香りの花」が開く瞬間を捉えてください。</p>
+    <div class="hint-box" id="hint-02">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-02" onchange="showHint('02')">
+        <option value="">── ワードを選ぶ ──</option>
+        <optgroup label="🔥 スモーク・ピート系">
+          <option data-hint="泥炭(ピート)を燃やした際の煙の香り。アイラモルトの代名詞">焚き火のようなスモーキーさ</option>
+          <option data-hint="海岸沿いのピートに由来する磯の香り。ラフロイグやアードベッグに顕著">潮風とヨードの香り</option>
+          <option data-hint="消毒薬に似たヨードの香り。アイラモルト特有。好き嫌いが分かれる">薬品的なヨード香</option>
+          <option data-hint="ピートの中でも土や森を思わせる穏やかな燻り香">背景に淡いスモークの気配</option>
+          <option data-hint="燻製肉や燻製魚を思わせる。ヘビーピートに多い">スモークのヒント</option>
+        </optgroup>
+        <optgroup label="🍯 甘・フルーツ系">
+          <option data-hint="バーボン樽熟成の定番香。バニラビーンズのような甘い芳香">バニラと焦がしたオーク</option>
+          <option data-hint="熟したリンゴ・洋梨・シナモンのスパイスが混在する温かい甘さ">焼きたてのアップルパイ</option>
+          <option data-hint="フレッシュな蜂蜜と焼いたリンゴが溶け合う。バーボン樽熟成に多い">はちみつがけのアップルタルト</option>
+          <option data-hint="シェリー樽熟成の甘さと果実感。干しブドウ・プルーンなど濃い甘み">熟したレーズン</option>
+          <option data-hint="シェリー樽長期熟成。チョコレートにドライフルーツの複雑な甘み">ビターチョコのほろ苦さ</option>
+          <option data-hint="熟した黒スグリやブルーベリーのような甘酸っぱい香り">ブラックベリーの甘み</option>
+          <option data-hint="スモーキーさの中に赤いベリーが混在。複雑な層を感じさせる">スモーキーなブラックフォレストケーキ</option>
+          <option data-hint="バーボン樽由来のメープルシロップに穀物の素朴な甘さ">メープル香るグラノーラ</option>
+          <option data-hint="シェリー樽の甘さとオーク由来のドライなフルーツが絡み合う">オークとドライフルーツが絡み合う</option>
+          <option data-hint="黒糖のコクのある甘さとスパイシーなプラムが重なる">黒糖シロップのプラムコンポート</option>
+        </optgroup>
+        <optgroup label="🌿 フローラル・穀物系">
+          <option data-hint="ジャスミンや白い花のような繊細な香り。グレーンウイスキーや軽めのモルトに多い">ほんのりと花のような甘い香り</option>
+          <option data-hint="春の野原を思わせるフレッシュな草・ハーブの香り。若いモルトに多い">青草のようなフレッシュさ</option>
+          <option data-hint="ライ麦や麦芽の素朴で穀物的な香り。アメリカンやシングルモルトの土台">麦芽の素朴な穀物香</option>
+          <option data-hint="バーボン樽由来のコーンの甘い穀物香。アメリカンウイスキーに多い">コーンのような甘い穀物香</option>
+          <option data-hint="バニラとヨーグルトの乳酸的な甘さに穀物の素朴さが合わさる">バニラヨーグルトをのせたシリアル</option>
+        </optgroup>
+        <optgroup label="🍵 スパイス・ナッツ・木香系">
+          <option data-hint="シナモン・ナツメグなどの温かいスパイスとキャラメル洋梨の甘さ">シナモン香るキャラメル洋梨のタルト</option>
+          <option data-hint="エスプレッソのビターさとチョコのコクが融合。シェリー樽熟成に多い">エスプレッソとビターチョコのテリーヌ</option>
+          <option data-hint="アーモンド・ヘーゼルナッツのような乾いた香ばしさ">ロースト感のあるナッツ香</option>
+          <option data-hint="新しいオーク樽由来の木材・鉛筆・バニラが混在した香り">フレッシュなオーク材の香り</option>
+          <option data-hint="長期熟成で発達する複雑な革・タバコ・木のような香り">オークのアクセント</option>
+          <option data-hint="穏やかなフルーティーさが背景にある。主張しすぎず全体を支える">フルーティーさの痕跡</option>
+          <option data-hint="モルト本来の麦の甘みや穀物の奥行きを感じさせるベース香">モルトの面影</option>
+          <option data-hint="白こしょうやジンジャーのような爽やかに刺激的なスパイス香">かすかに潮のヨード香</option>
+        </optgroup>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-02','tags-02','hint-02')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-02" type="text" placeholder="✏️ 自由入力（例：ドライフルーツと革の複雑な香り）" onkeydown="if(event.key==='Enter')addFree('free-02','tags-02')">
+      <button class="add-free-btn" onclick="addFree('free-02','tags-02')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-02"></div>
+  </div>
+</div>
+
+<!-- 03 パレート -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">03</div>
+    <div class="section-title">舌触りと余韻<small>Palate & Finish</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">口に含んだ瞬間から、喉を通した後に鼻に抜ける「戻り香」までを追いかけます。</p>
+    <div class="hint-box" id="hint-03">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-03" onchange="showHint('03')">
+        <option value="">── ワードを選ぶ ──</option>
+        <optgroup label="🧈 テクスチャー・口当たり">
+          <option data-hint="口の中でなめらかに広がる。タンニンが少なく熟成が穏やかな証">シルクのような口当たり</option>
+          <option data-hint="なめらかでひっかかりがない。加水や長期熟成でグリセリンが増す">しなやかな口当たり</option>
+          <option data-hint="角が取れた丸みのある甘さ。バーボン樽熟成や加水後に感じやすい">まるみのある甘さ</option>
+          <option data-hint="高品質なオイルのような重さ。アルコール由来のリッチな質感">オイリーでリッチな質感</option>
+          <option data-hint="クリームのようにとろりとした液体感。糖分や熟成による複雑さから生まれる">クリーミーでトロリとした舌触り</option>
+          <option data-hint="絹の肌触りのようになめらか。タンニンや刺激がほぼない高品質な証">絹のようになめらかな質感</option>
+        </optgroup>
+        <optgroup label="🔥 甘み・スパイス・苦み">
+          <option data-hint="蜂蜜のような粘度のある甘み。バーボン樽熟成の典型的な甘さ">蜂蜜のようなトロリとした甘み</option>
+          <option data-hint="ライ麦由来またはオーク由来のスパイシーな刺激。アメリカンに多い">力強くスパイシーな刺激</option>
+          <option data-hint="穏やかな収斂感。シェリー樽由来のタンニンが心地よく作用">穏やかなタンニン</option>
+          <option data-hint="酸味が前面に出ず全体を引き締める役割。バランスの証">控えめな酸味</option>
+          <option data-hint="コーヒーやダークチョコのような心地よい苦み。余韻に残りやすい">ビターチョコのような苦み</option>
+          <option data-hint="口に含んだ際に口腔内を軽く温める。適度なアルコール感のサイン">心地よいアルコールの温かみ</option>
+        </optgroup>
+        <optgroup label="🌊 余韻・フィニッシュ">
+          <option data-hint="飲み込んだ後もピートの燻り香が長く鼻に残る。アイラモルトの特徴">長く続くピーティーな余韻</option>
+          <option data-hint="後味がスパッと切れる。軽めのウイスキーや加水後に感じやすい">ドライでキレのあるフィニッシュ</option>
+          <option data-hint="余韻が長く続き、波のように繰り返し香りが戻ってくる">余韻が長く尾を引く</option>
+          <option data-hint="薄く繊細な余韻。主張せず静かに消えていく上品なフィニッシュ">繊細な余韻</option>
+          <option data-hint="甘みが徐々にフェードアウトし心地よく消えていく">ほのかな甘さが静かに消えていく</option>
+          <option data-hint="スパイシーな刺激の後に甘みが顔を出す。複雑な余韻の変化">スパイスの後に甘みが顔を出す</option>
+          <option data-hint="飲み込んだ後に果実やフルーツの香りが戻ってくる">フルーティーな戻り香</option>
+        </optgroup>
+        <optgroup label="✨ 詩的・印象表現">
+          <option data-hint="耳元で囁くような繊細な香りの動き。強さより深さを感じるウイスキーに">ささやくように魅惑的</option>
+          <option data-hint="土・石・ミネラルのような無機質な香り。スコットランドの大地を想起">大地のミネラルを感じさせる</option>
+          <option data-hint="野生的な力強さと洗練さが共存。個性の強いシングルモルトに">野性的でありながら上品</option>
+          <option data-hint="柔らかい外側の奥に確固たるストラクチャーが感じられる">芯に力強さを秘めた柔らかさ</option>
+          <option data-hint="口に含んだ瞬間より時間をかけて香りや味が展開する。熟成年数の高いモルトに">時間をかけて開いていく複雑さ</option>
+          <option data-hint="遠い記憶を呼び起こすような甘さ。表現に奥行きを与える詩的な表現">記憶の奥を刺激するような甘さ</option>
+          <option data-hint="燻製の深みとフルーツの明るさが同居。複雑な熟成香の表現に">燻されたような深みと果実の輝き</option>
+          <option data-hint="長い年月が液体に宿っているような凝縮感。長期熟成ものに">時間が凝縮されたような熟成感</option>
+          <option data-hint="言語化できないほど多層的な複雑さ。最大の賛辞として">言葉では追いきれない奥行き</option>
+        </optgroup>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-03','tags-03','hint-03')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-03" type="text" placeholder="✏️ 自由入力（例：長い余韻の末にレモンピールが顔を出す）" onkeydown="if(event.key==='Enter')addFree('free-03','tags-03')">
+      <button class="add-free-btn" onclick="addFree('free-03','tags-03')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-03"></div>
+  </div>
+</div>
+
+<!-- 04 逃げワード -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">04</div>
+    <div class="section-title">使える逃げワード<small>Escape Words - 断言を和らげる魔法の修飾語</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">どんな表現にも前後に添えるだけで使えます。</p>
+    <div class="hint-box" id="hint-04">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-04" onchange="showHint('04')">
+        <option value="">── ワードを選ぶ ──</option>
+        <optgroup label="微量・弱め">
+          <option data-hint="例:「かすかにスモーキー」- 確かに感じるが量は少ない時に">かすかに</option>
+          <option data-hint="例:「ほんのり甘い」- 優しく漂う印象を伝える時に">ほんのり</option>
+          <option data-hint="例:「うっすらとヨード」- 薄く確かに存在する感覚に">うっすらと</option>
+          <option data-hint="例:「微かなフローラル」- 繊細で消えそうな印象を伝える時に">微かな</option>
+          <option data-hint="例:「淡いフルーティーさ」- 薄く繊細な印象を伝える時に">淡い</option>
+          <option data-hint="例:「いくらかスパイシー」- 少量感を出したい時に">いくらか</option>
+        </optgroup>
+        <optgroup label="程度・曖昧">
+          <option data-hint="例:「やや辛口」- 程度を曖昧にしたい時の便利ワード">やや</option>
+          <option data-hint="例:「どことなく熟成感」- 明確ではないが感じる雰囲気に">どことなく</option>
+          <option data-hint="例:「なんとなく重厚感」- 直感的な印象を表す時に">なんとなく</option>
+          <option data-hint="例:「〜っぽいスモーク」- 断言せず近いニュアンスを伝える時に">〜っぽい</option>
+          <option data-hint="例:「バニラのような甘さ」- 比喩的に近いイメージを伝える時に">〜のような</option>
+        </optgroup>
+        <optgroup label="質感・方向性">
+          <option data-hint="例:「優しく広がる香り」- 柔らかさや穏やかさを表現したい時に">優しく</option>
+          <option data-hint="例:「穏やかなタンニン」- 強くない、落ち着いた印象に">穏やかな</option>
+          <option data-hint="例:「控えめな酸味」- 主張しすぎない要素を伝える時に">控えめな</option>
+          <option data-hint="例:「繊細なフローラルノート」- 壊れそうな軽さを表現する時に">繊細な</option>
+          <option data-hint="例:「しなやかな口当たり」- 流れるような質感を表す時に">しなやかな</option>
+          <option data-hint="例:「まるみのある甘さ」- 角のない柔らかな印象に">まるみのある</option>
+          <option data-hint="例:「余韻の長いスモーキーさ」- 飲み終わった後も続く印象に">余韻の長い</option>
+        </optgroup>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-04','tags-04','hint-04')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-04" type="text" placeholder="✏️ 自由入力" onkeydown="if(event.key==='Enter')addFree('free-04','tags-04')">
+      <button class="add-free-btn" onclick="addFree('free-04','tags-04')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-04"></div>
+  </div>
+</div>
+
+<!-- 05 深めるワード -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">05</div>
+    <div class="section-title">表現力を深めるワード<small>Deep Words - 「〜の○○」の形で使います</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">香りや味わいの前後に組み合わせて使います。</p>
+    <div class="hint-box" id="hint-05">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-05" onchange="showHint('05')">
+        <option value="">── ワードを選ぶ ──</option>
+        <option data-hint="例:「スモークのヒント」- かすかに感じる程度のアクセントとして">〜のヒント</option>
+        <option data-hint="例:「ピートの痕跡」- 過去に存在した証が残っているような印象に">〜の痕跡</option>
+        <option data-hint="例:「オークのアクセント」- 全体に小さなアクセントとして作用している時に">〜のアクセント</option>
+        <option data-hint="例:「フルーツのタッチ」- 軽く触れた程度の印象。hint より少し実感を伴う">〜のタッチ</option>
+        <option data-hint="例:「背景にバニラ」- メインではなく後ろに控えている香りに">背景に〜</option>
+        <option data-hint="例:「熟成のニュアンス」- ニュアンスは色合いや雰囲気を指す洗練された表現">〜のニュアンス</option>
+        <option data-hint="例:「チョコの余韻」- 飲んだ後に残る記憶のような香りや味わいに">〜の余韻</option>
+        <option data-hint="例:「昔のピートの面影」- かつてあった要素が薄れながらも残っている印象に">〜の面影</option>
+        <option data-hint="例:「スモークの気配」- 存在を感じさせるが実体が薄い。詩的な表現に">〜の気配</option>
+        <option data-hint="例:「バニラを纏う」- 全体を包み込むように香りが漂う様子に">〜を纏う</option>
+        <option data-hint="例:「フルーツの印象」- 具体的に断言せず、全体的なイメージを伝える時に">〜の印象</option>
+        <option data-hint="例:「熟成の奥行き」- 一層ではなく多層的な深みを感じる時に">〜の奥行き</option>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-05','tags-05','hint-05')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-05" type="text" placeholder="✏️ 自由入力" onkeydown="if(event.key==='Enter')addFree('free-05','tags-05')">
+      <button class="add-free-btn" onclick="addFree('free-05','tags-05')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-05"></div>
+  </div>
+</div>
+
+<!-- 06 フレーズビルダー -->
+
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <div class="section-number">06</div>
+    <div class="section-title">フレーズビルダー<small>Phrase Builder - 形容詞を組み合わせてフレーズを生成</small></div>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="section-body">
+    <p class="section-hint">形容詞を組み合わせてフレーズを生成します。プルダウンから選んで追加してください。</p>
+    <div class="hint-box" id="hint-06">💡 プルダウンを選ぶとヒントが表示されます</div>
+    <div class="dropdown-wrap">
+      <select class="word-select" id="sel-06" onchange="showHint('06')">
+        <option value="">── ワードを選ぶ ──</option>
+        <optgroup label="🎵 全体の印象">
+          <option data-hint="どっしりとした厚み。長期熟成やシェリー樽由来の深みに使いやすい">重厚な</option>
+          <option data-hint="柔らかく甘く熟した印象。角が取れた穏やかなウイスキーに">メロウな</option>
+          <option data-hint="海辺の蒸留所を思わせるソルティーなニュアンス。アイラや島系に">潮気を含んだ</option>
+          <option data-hint="多層的な香味が絡み合っている。長期熟成の複雑な味わいを讃える時に">複雑に絡み合う</option>
+          <option data-hint="洗練された上品さ。繊細で均整のとれたウイスキーに">エレガントな</option>
+        </optgroup>
+        <optgroup label="🔥 個性・キャラクター">
+          <option data-hint="ピート由来の泥炭香が主役のウイスキーに。アイラモルトの代名詞">ピーティーな</option>
+          <option data-hint="燻煙の香りが特徴的。ピートだけでなく樽由来のスモーク感にも">スモーキーな</option>
+          <option data-hint="果実感が豊かなウイスキーに。シェリー樽やワイン樽熟成に多い">フルーティーな</option>
+          <option data-hint="スパイスの刺激が際立つ。ライウイスキーやオーク由来のスパイス感に">スパイシーな</option>
+          <option data-hint="角が取れて丸みのある穏やかな味わい。加水後や長期熟成に">まろやかな</option>
+          <option data-hint="未馴化の力強さ。カスクストレングスや個性の強いシングルモルトに">野性的な</option>
+        </optgroup>
+        <optgroup label="✨ 品格・余韻">
+          <option data-hint="主張が控えめで品のある佇まい。繊細な日本のウイスキーにも">穏やかで上品な</option>
+          <option data-hint="長い年月を経た深みと複雑さ。熟成年数の高いモルトを讃える時に">熟成感ある</option>
+          <option data-hint="しっかりとした骨格・ストラクチャーがある。フルボディのウイスキーに">力強く骨格のある</option>
+          <option data-hint="引き締まった清潔感のある印象。日本のウイスキーを表現する時にも">凛とした</option>
+          <option data-hint="飲み込んだ後も長く続く深い余韻。上質なウイスキーの証">余韻が長く深い</option>
+          <option data-hint="一口で語り尽くせない多層的な味わい。複雑さを讃える表現">奥行きのある</option>
+          <option data-hint="繊細でありながら複雑。矛盾するようで両立する高品質の証">繊細で複雑な</option>
+        </optgroup>
+      </select>
+      <button class="add-word-btn" onclick="addFromSelect('sel-06','tags-06','hint-06')">＋追加</button>
+    </div>
+    <div class="free-wrap">
+      <input class="free-input" id="free-06" type="text" placeholder="✏️ 自由入力（例：華やかで芳醇な）" onkeydown="if(event.key==='Enter')addFree('free-06','tags-06')">
+      <button class="add-free-btn" onclick="addFree('free-06','tags-06')">追加</button>
+    </div>
+    <div class="selected-tags" id="tags-06"></div>
+  </div>
+</div>
+
+<!-- メモ -->
+
+<div class="memo-section">
+  <h2 class="memo-title">Tasting Log</h2>
+  <textarea id="memo-box" placeholder="銘柄:&#13;場所:&#13;感想:"></textarea>
+  <div class="memo-btns">
+    <button class="memo-btn" onclick="saveToLocal()">ログを保存</button>
+    <button class="memo-btn clear" onclick="clearMemo()">クリア</button>
+  </div>
+</div>
+
+<footer>&copy; 2026 amber-lexicon</footer>
+</div>
+
+<script>
+// ヒント表示
+function showHint(n) {
+  const sel  = document.getElementById('sel-'+n);
+  const box  = document.getElementById('hint-'+n);
+  const opt  = sel.options[sel.selectedIndex];
+  const hint = opt ? opt.dataset.hint : '';
+  if (hint) {
+    box.textContent = '💡 ' + hint;
+    box.classList.add('has-hint');
+  } else {
+    box.textContent = '💡 プルダウンを選ぶとヒントが表示されます';
+    box.classList.remove('has-hint');
+  }
+}
+
+// プルダウン追加
+function addFromSelect(selId, tagsId, hintId) {
+  const sel  = document.getElementById(selId);
+  const word = sel.value;
+  if (!word) return;
+  addTag(tagsId, word, false);
+  sel.value = '';
+  // ヒントリセット
+  const box = document.getElementById(hintId);
+  box.textContent = '💡 プルダウンを選ぶとヒントが表示されます';
+  box.classList.remove('has-hint');
+}
+
+// 自由入力追加
+function addFree(inputId, tagsId) {
+  const input = document.getElementById(inputId);
+  const word  = input.value.trim();
+  if (!word) return;
+  addTag(tagsId, word, true);
+  input.value = '';
+}
+
+// タグ生成
+function addTag(tagsId, word, isFree) {
+  const container = document.getElementById(tagsId);
+  const exists = Array.from(container.querySelectorAll('.sel-tag'))
+    .some(t => t.dataset.word === word);
+  if (exists) return;
+  const tag = document.createElement('span');
+  tag.className    = 'sel-tag' + (isFree ? ' free-tag' : '');
+  tag.dataset.word = word;
+  tag.innerHTML    = `${word}<button class="sel-tag-remove" onclick="removeTag(this)">×</button>`;
+  container.appendChild(tag);
+  const memo = document.getElementById('memo-box');
+  memo.value += (memo.value ? '\n' : '') + word;
+}
+
+function removeTag(btn) { btn.closest('.sel-tag').remove(); }
+
+// セクション開閉
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  icon.style.transform = open ? 'rotate(0)' : 'rotate(180deg)';
+}
+
+
+
+// 保存・クリア
+function saveToLocal() {
+  const c = document.getElementById('memo-box').value;
+  if (!c) return;
+  localStorage.setItem('whisky_note_' + Date.now(), c);
+  alert('テイスティングノートを保存しました。');
+}
+function clearMemo() {
+  if (!confirm('記録を消去してもよろしいですか？')) return;
+  document.getElementById('memo-box').value = '';
+  document.querySelectorAll('.selected-tags').forEach(c => c.innerHTML = '');
+}
+
+// 初期表示：01を開く
+document.addEventListener('DOMContentLoaded', () => {
+  const first = document.querySelector('.section');
+  if (first) {
+    first.querySelector('.section-body').style.display = 'block';
+    first.querySelector('.toggle-icon').style.transform = 'rotate(180deg)';
+  }
+
+  // URLパラメーターからaroma-mosaicのデータを受け取る
+  const params = new URLSearchParams(window.location.search);
+  const aromaParam = params.get('aroma');
+  if (aromaParam) {
+    // 02アロマのセクションを開く
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(sec => {
+      const title = sec.querySelector('.section-title');
+      if (title && title.textContent.includes('アロマ')) {
+        sec.querySelector('.section-body').style.display = 'block';
+        sec.querySelector('.toggle-icon').style.transform = 'rotate(180deg)';
+      }
+    });
+
+    // "Orange:3,Peat:2" を分解してタグに追加
+    const items = aromaParam.split(',');
+    items.forEach(item => {
+      const [name, score] = item.split(':');
+      if (name) {
+        const label = score ? `${decodeURIComponent(name)}（強さ${score}）` : decodeURIComponent(name);
+        addTag('tags-02', label, true);
+      }
+    });
+
+    // 受け取り通知
+    const notice = document.createElement('div');
+    notice.style.cssText = 'background:rgba(200,136,42,.15);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.8rem;color:var(--deep);';
+    notice.textContent = `🔗 aroma-mosaicから ${items.length} 件のアロマを受け取りました`;
+    const body02 = document.getElementById('tags-02').closest('.section-body');
+    body02.insertBefore(notice, body02.firstChild);
+  }
+});
+</script>
+
+</body>
+</html>
